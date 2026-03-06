@@ -12,6 +12,7 @@ let usedAudience = false;
 let moneyInterval;
 let filteredQuestions = [];
 let current = 0;
+let currentOptions = [];
 
 const money = [
   "Rp 100.000",
@@ -74,20 +75,20 @@ function loadQuestion() {
   const optDiv = document.getElementById("options");
   optDiv.innerHTML = "";
 
-  // gabungkan opsi dengan index
-  let options = q.options.map((opt, i) => ({
+  // gabungkan opsi dengan status benar
+  currentOptions = q.options.map((opt, i) => ({
     text: opt,
     correct: i === q.correct
   }));
 
   // acak opsi
-  options = shuffle(options);
+  currentOptions = shuffle(currentOptions);
 
-  options.forEach((opt) => {
+  currentOptions.forEach((opt, i) => {
     const div = document.createElement("div");
     div.className = "option";
     div.innerText = opt.text;
-    div.onclick = () => checkAnswer(opt.correct, div);
+    div.onclick = () => checkAnswer(i, div);
     optDiv.appendChild(div);
   });
 
@@ -96,12 +97,14 @@ function loadQuestion() {
 
 
 
-function checkAnswer(isCorrect, el) {
+function checkAnswer(i, el) {
+
   document.querySelectorAll(".option").forEach((opt) => {
     opt.style.pointerEvents = "none";
   });
 
-  if (isCorrect) {
+  if (currentOptions[i].correct) {
+
     document.getElementById("correctSound").play();
     el.classList.add("correct");
 
@@ -113,17 +116,22 @@ function checkAnswer(isCorrect, el) {
         showWinPopup();
       }
     }, 1000);
+
   } else {
+
     document.getElementById("wrongSound").play();
     el.classList.add("wrong");
 
-    document.querySelectorAll(".option")[q.correct].classList.add("correct");
+    // tampilkan jawaban benar
+    const correctIndex = currentOptions.findIndex(o => o.correct);
+    document.querySelectorAll(".option")[correctIndex].classList.add("correct");
 
     setTimeout(() => {
       location.reload();
     }, 1500);
   }
 }
+
 function renderLadder() {
   const ladder = document.getElementById("ladder");
   ladder.innerHTML = "";
@@ -141,22 +149,20 @@ function renderLadder() {
 }
 
 document.getElementById("fifty").onclick = function () {
+
   if (used5050) return;
 
   used5050 = true;
   this.classList.add("used");
 
-
   let wrongIndexes = [];
 
-  q.options.forEach((opt, i) => {
-    if (i !== q.correct) wrongIndexes.push(i);
+  currentOptions.forEach((opt, i) => {
+    if (!opt.correct) wrongIndexes.push(i);
   });
 
-  // acak salah
-  wrongIndexes.sort(() => 0.5 - Math.random());
+  shuffle(wrongIndexes);
 
-  // ambil 2 untuk disembunyikan
   const hide = wrongIndexes.slice(0, 2);
 
   document.querySelectorAll(".option").forEach((btn, i) => {
@@ -164,6 +170,7 @@ document.getElementById("fifty").onclick = function () {
       btn.style.visibility = "hidden";
     }
   });
+
 };
 
 document.getElementById("friend").onclick = function () {
