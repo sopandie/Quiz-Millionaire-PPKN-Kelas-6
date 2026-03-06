@@ -1,3 +1,11 @@
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 let used5050 = false;
 let usedFriend = false;
 let usedAudience = false;
@@ -30,7 +38,9 @@ function startGame() {
     return;
   }
 
-  filteredQuestions = questions.filter((q) => q.level === level);
+filteredQuestions = shuffle(
+  questions.filter((q) => q.level === level)
+);
 
   document.querySelector(".start-screen").style.display = "none";
   document.querySelector(".container").style.display = "flex";
@@ -64,25 +74,34 @@ function loadQuestion() {
   const optDiv = document.getElementById("options");
   optDiv.innerHTML = "";
 
-  q.options.forEach((opt, i) => {
+  // gabungkan opsi dengan index
+  let options = q.options.map((opt, i) => ({
+    text: opt,
+    correct: i === q.correct
+  }));
+
+  // acak opsi
+  options = shuffle(options);
+
+  options.forEach((opt) => {
     const div = document.createElement("div");
     div.className = "option";
-    div.innerText = opt;
-    div.onclick = () => checkAnswer(i, div);
+    div.innerText = opt.text;
+    div.onclick = () => checkAnswer(opt.correct, div);
     optDiv.appendChild(div);
   });
 
   renderLadder();
 }
 
-function checkAnswer(i, el) {
-  const q = filteredQuestions[current];
 
+
+function checkAnswer(isCorrect, el) {
   document.querySelectorAll(".option").forEach((opt) => {
     opt.style.pointerEvents = "none";
   });
 
-  if (i === q.correct) {
+  if (isCorrect) {
     document.getElementById("correctSound").play();
     el.classList.add("correct");
 
@@ -94,7 +113,6 @@ function checkAnswer(i, el) {
         showWinPopup();
       }
     }, 1000);
-
   } else {
     document.getElementById("wrongSound").play();
     el.classList.add("wrong");
@@ -128,7 +146,6 @@ document.getElementById("fifty").onclick = function () {
   used5050 = true;
   this.classList.add("used");
 
-  const q = filteredQuestions[current];
 
   let wrongIndexes = [];
 
